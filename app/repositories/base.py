@@ -1,7 +1,6 @@
-from optparse import Option
+from contextlib import asynccontextmanager
 from typing import Generic, List, Optional, Type, TypeVar
 
-from pydantic.main import ModelT
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -11,13 +10,23 @@ ModelType = TypeVar("ModelType", bound=Base)
 
 
 class BaseRepository(Generic[ModelType]):
-    """Base repository with CRUD operations"""
+    """Base repository with CRUD operations and transaction management"""
 
     def __init__(self, model: Type[ModelType], session: AsyncSession) -> None:
-        """Initialize repository"""
-
         self.model = model
         self.session = session
+
+    @asynccontextmanager
+    async def transaction(self):
+        """Context manager for managing transactions. Automatically commits on success, rolls back on error"""
+        try:
+            yield self
+            await self.session.commit()
+        except Exception as e:
+            await self.session.rollback()
+            raise e
+        finally:
+            await self.session.flush()
 
     async def get_by_id(self, id: int) -> Optional[ModelType]:
         """Get entity by ID"""
@@ -43,7 +52,6 @@ class BaseRepository(Generic[ModelType]):
 
     async def create(self, **kwargs) -> ModelType:
         """Create new entity"""
-
         instance = self.model(**kwargs)
         self.session.add(instance)
         await self.session.flush()
@@ -52,7 +60,6 @@ class BaseRepository(Generic[ModelType]):
 
     async def update(self, instance: ModelType, **kwargs) -> ModelType:
         """Update entity"""
-
         for key, value in kwargs.items():
             if hasattr(instance, key):
                 setattr(instance, key, value)
@@ -66,10 +73,10 @@ class BaseRepository(Generic[ModelType]):
         await self.session.delete(instance)
         await self.session.flush()
 
-    async def commit(self) -> None:
-        """Commit transaction"""
-        await self.session.commit()
+    async def _flush(self) -> None:
+        """Flush changes to database"""
+        await self.session.flush()
 
-    async def rollback(self) -> None:
-        """Rollback transaction"""
-        await self.session.rollback()
+    async def _refresh(self, instance):
+        """Refresh instance from database"""
+        await self.session.refresh(instance)
