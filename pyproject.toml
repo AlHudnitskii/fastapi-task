@@ -1,32 +1,41 @@
 [tool.poetry]
-name = "task"
+name = "transaction-api"
 version = "0.1.0"
-description = ""
-authors = ["Author <author@gmail.com>"]
+description = "Optimized API service for transaction processing"
+authors = ["Author <alhudnitski@gmail.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
 python = ">=3.11, <3.13"
-uvicorn = "^0.23.2"
-httpx = "^0.25.0"
 fastapi = "^0.115.6"
+uvicorn = {extras = ["standard"], version="^0.23.2"}
 sqlalchemy = "^2.0.37"
-aiosqlite = "^0.20.0"
+asyncpg = "^0.29.0"
+pydantic = "^2.10.0"
+pydantic-settings = "^2.7.0"
+alembic = "^1.13.0"
+celery = {extras = ["redis"], version = "^5.4.0"}
+redis = "^5.0.0"
+httpx = "^0.25.0"
+python-dotenv = "^1.0.0"
 
 
 [tool.poetry.group.dev.dependencies]
-faker = "^19.10.0"
-pylint = "^3.0.1"
-pylint-pydantic = "^0.3.0"
 pytest = "^7.4.2"
-pytest-alembic = "^0.10.7"
 pytest-asyncio = "^0.21.1"
 pytest-cov = "^4.1.0"
 pytest-env = "^1.0.1"
 pytest-httpx = "^0.26.0"
 pytest-mock = "^3.11.1"
-pytest-mock-server = "^0.3.0"
 pytest-xdist = "^3.3.1"
+faker = "^19.10.0"
+mypy = "^1.7.0"
+flake8 = "^6.1.0"
+isort = "^5.12.0"
+black = "^23.11.0"
+pre-commit = "^3.5.0"
+pylint = "^3.0.1"
+types-redis = "^4.6.0"
 
 
 [build-system]
@@ -35,3 +44,41 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.black]
 line-length = "120"
+targer-version = ["py311"]
+include = '\.pyi?$'
+
+[tool.isort]
+profile = "black"
+line_length = 120
+multi_line_output = 3
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_any_generics = false
+disallow_subclassing_any = false
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --cov=app --cov-report=html --cov-report=term-missing"
+
+[tool.coverage.run]
+omit = [
+    "*/tests/*",
+    "*/migrations/*",
+    "*/__init__.py",
+]
+
+[tool.pylint.messages_control]
+disable = [
+    "C0111",
+    "R0903",
+]

@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from db_models import User, Transaction
 from python_models import CurrencyEnum
 
-EXCHANGE_RATES_TO_USD = {
+EXCHANGE_RATES_TO_USD = {x
     CurrencyEnum.USD: 1,
     CurrencyEnum.EUR: 0.9342,
     CurrencyEnum.AUD: 0.5447,
