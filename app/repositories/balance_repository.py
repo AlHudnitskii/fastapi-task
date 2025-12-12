@@ -1,27 +1,84 @@
-from optparse import Option
-from typing import Generic, List, Optional, Type, TypeVar
+from decimal import Decimal
+from typing import List, Optional
 
-from pydantic.main import ModelT
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.database import Base
+from app.models.db_models import CurrencyEnumDB, UserBalance
+from app.repositories.base import BaseRepository
 
-ModelType = TypeVar("ModelType", bound=Base)
 
+class BalanceRepository(BaseRepository[UserBalance]):
+    """Repository for UserBalance operations"""
 
-class BaseRepository(Generic[ModelType]):
-    """Base repository with CRUD operations"""
+    def __init__(self, session: AsyncSession) -> None:
+        super().__init__(UserBalance, session)
 
-    def __init__(self, model: Type[ModelType], session: AsyncSession) -> None:
-        """Initialize repository"""
-
-        self.model = model
-        self.session = session
-
-    async def get_by_id(self, id: int) -> Optional[ModelType]:
-        """Get entity by ID"""
+    async def get_by_user_and_currency(
+        self,
+        user_id: int,
+        currency: CurrencyEnumDB,
+    ) -> Optional[UserBalance]:
+        """Get balance by user and currency."""
         result = await self.session.execute(
-            select(self.model).where(self.model.id == id)
+            select(UserBalance)
+            .where(UserBalance.user_id == user_id)
+            .where(UserBalance.currency == currency)
         )
         return result.scalar_one_or_none()
+
+    async def get_user_balances(self, user_id: int) -> List[UserBalance]:
+        """Get all balances for a user."""
+        result = await self.session.execute(
+            select(UserBalance)
+            .where(UserBalance.user_id == user_id)
+            .order_by(UserBalance.currency)
+        )
+        return list(result.scalars().all())
+
+    async def update_balance(
+        self,
+        user_id: int,
+        currency: CurrencyEnumDB,
+        amount_delta: Decimal,
+    ) -> UserBalance:
+        """Update balance by adding delta to current amount."""
+        balance = await self.get_by_user_and_currency(user_id, currency)
+
+        if balance is None:
+            raise ValueError(
+                f"Balance not found for user {user_id} and currency {currency}"
+            )
+
+        new_amount = balance.amount + amount_delta
+
+        if new_amount < 0:
+            raise ValueError(
+                f"Insufficient balance: current={balance.amount}, delta={amount_delta}, result={new_amount}"
+            )
+
+        balance.amount = new_amount
+        await self.session.flush()
+        await self.session.refresh(balance)
+
+        return balance
+
+    async def create_all_currency_balances(self, user_id: int) -> List[UserBalance]:
+        """Create zero balances for all currencies for a user."""
+        balances = []
+
+        for currency in CurrencyEnumDB:
+            balance = UserBalance(
+                user_id=user_id,
+                currency=currency,
+                amount=Decimal("0"),
+            )
+            self.session.add(balance)
+            balances.append(balance)
+
+        await self.session.flush()
+
+        for balance in balances:
+            await self.session.refresh(balance)
+
+        return balances
