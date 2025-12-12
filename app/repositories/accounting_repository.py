@@ -1,16 +1,21 @@
+"""Accounting repository module."""
+
 from datetime import datetime
 from decimal import Decimal
 from typing import List, Optional
 
-from app.models.accounting_models import Account, JournalEntry, OutboxEvent, Transaction
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.models.db_models.accounting import Account, JournalEntry, OutboxEvent
+from app.models.db_models.transaction import Transaction
+
 
 class AccountingRepository:
-    """Repository for accounting operations"""
+    """Repository for accounting operations."""
 
     def __init__(self, session: AsyncSession):
+        """Initialize the repository with an AsyncSession."""
         self.session = session
 
     async def create_transaction_with_entries(
@@ -20,8 +25,7 @@ class AccountingRepository:
         reference_number: Optional[str] = None,
         created_by: Optional[str] = None,
     ) -> Transaction:
-        """Creates a transaction with journal entries, checking the double-entry rule"""
-
+        """Create a transaction with journal entries, checking the double-entry rule."""
         total_debit = Decimal("0")
         total_credit = Decimal("0")
 
@@ -33,10 +37,7 @@ class AccountingRepository:
                 total_credit += amount
 
         if total_debit != total_credit:
-            raise ValueError(
-                f"Rule violation: "
-                f"Debit ({total_debit}) does not equal Credit ({total_credit})"
-            )
+            raise ValueError(f"Rule violation: " f"Debit ({total_debit}) does not equal Credit ({total_credit})")
 
         transaction = Transaction(
             description=description,
@@ -60,10 +61,8 @@ class AccountingRepository:
         return transaction
 
     async def post_transaction(self, transaction_id: int) -> Transaction:
-        """Posts a transaction and creates an event in the outbox"""
-        result = await self.session.execute(
-            select(Transaction).where(Transaction.id == transaction_id)
-        )
+        """Post a transaction and creates an event in the outbox."""
+        result = await self.session.execute(select(Transaction).where(Transaction.id == transaction_id))
         transaction = result.scalar_one()
 
         if transaction.status != "DRAFT":
@@ -80,11 +79,7 @@ class AccountingRepository:
                 "transaction_id": transaction.id,
                 "reference_number": transaction.reference_number,
                 "description": transaction.description,
-                "total_amount": float(
-                    sum(
-                        e.amount for e in transaction.entries if e.entry_type == "DEBIT"
-                    )
-                ),
+                "total_amount": Decimal(sum(e.amount for e in transaction.entries if e.entry_type == "DEBIT")),
                 "posted_at": transaction.posted_at.isoformat(),
             },
             transaction_id=transaction.id,
@@ -94,10 +89,8 @@ class AccountingRepository:
         await self.session.commit()
         return transaction
 
-    async def get_account_balance(
-        self, account_id: int, as_of_date: Optional[datetime] = None
-    ) -> Decimal:
-        """Get the balance of an account on a specific date"""
+    async def get_account_balance(self, account_id: int, as_of_date: Optional[datetime] = None) -> Decimal:
+        """Get the balance of an account on a specific date."""
         query = (
             select(
                 func.sum(
@@ -108,9 +101,7 @@ class AccountingRepository:
                 )
             )
             .join(Transaction)
-            .where(
-                JournalEntry.account_id == account_id, Transaction.status == "POSTED"
-            )
+            .where(JournalEntry.account_id == account_id, Transaction.status == "POSTED")
         )
 
         if as_of_date:
@@ -120,10 +111,8 @@ class AccountingRepository:
         balance = result.scalar()
         return balance or Decimal("0")
 
-    async def get_trial_balance(
-        self, as_of_date: Optional[datetime] = None
-    ) -> List[dict]:
-        """Get trial balance"""
+    async def get_trial_balance(self, as_of_date: Optional[datetime] = None) -> List[dict]:
+        """Get trial balance."""
         query = (
             select(
                 Account.id,
@@ -163,9 +152,9 @@ class AccountingRepository:
                     "account_code": row.code,
                     "account_name": row.name,
                     "account_type": row.account_type,
-                    "debit": float(row.total_debit),
-                    "credit": float(row.total_credit),
-                    "balance": float(balance),
+                    "debit": Decimal(row.total_debit),
+                    "credit": Decimal(row.total_credit),
+                    "balance": Decimal(balance),
                 }
             )
 
