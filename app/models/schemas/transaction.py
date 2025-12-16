@@ -4,8 +4,9 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Optional
 
-from models.enums import CurrencyEnumDB, TransactionStatusEnumDB
 from pydantic import BaseModel
+
+from app.models.enums import CurrencyEnumDB, TransactionStatusEnumDB
 
 
 class RequestTransactionModel(BaseModel):
