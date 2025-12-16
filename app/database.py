@@ -1,12 +1,11 @@
-from threading import ExceptHookArgs
-from typing import AsyncGenerator
-from zipfile import BadZipfile
+"""Database configuration and session management."""
 
-from sqlachemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from typing import AsyncGenerator
+
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import declarative_base
 
 from app.config import settings
-from app.main import async_session_maker
 
 engine = create_async_engine(
     settings.database_url,
@@ -18,7 +17,7 @@ engine = create_async_engine(
 
 async_session_maker = async_sessionmaker(
     engine,
-    class_=AsyncGenerator,
+    class_=AsyncSession,
     expire_on_commit=False,
     autocommit=False,
     autoflush=False,
@@ -29,8 +28,7 @@ Base = declarative_base()
 
 async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
     """Dependency for getting async database session."""
-
-    async with async_session_maker as session:
+    async with async_session_maker() as session:
         try:
             yield session
         except Exception:
@@ -41,6 +39,6 @@ async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
 
 
 async def init_db() -> None:
-    """Initialize database tables"""
+    """Initialize database tables."""
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
