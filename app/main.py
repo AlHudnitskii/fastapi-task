@@ -4,9 +4,13 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import users
+from app.api import reports, transactions, users
 from app.config import settings
 from app.database import init_db
+from app.logging import setup_logging
+from app.middleware.logger import logging_middleware
+
+setup_logging(log_level=settings.log_level or "INFO", app_name=settings.app_name)
 
 app = FastAPI(
     title=settings.app_name,
@@ -23,10 +27,12 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.middleware("http")(logging_middleware)
+
 
 app.include_router(users.router)
-# app.include_router(transactions.router)
-# app.include_router(reports.router)
+app.include_router(transactions.router)
+app.include_router(reports.router)
 
 
 @app.on_event("startup")

@@ -1,21 +1,15 @@
-from models.enums import CurrencyEnumDB, TransactionStatusEnumDB
-from sqlalchemy import (
-    Column,
-    DateTime,
-    Enum,
-    ForeignKey,
-    Index,
-    Integer,
-    Numeric,
-)
+"""Middleware to log requests and responses."""
+
+from sqlalchemy import Column, DateTime, Enum, ForeignKey, Index, Integer, Numeric
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
 from app.database import Base
+from app.models.enums import CurrencyEnumDB, TransactionStatusEnumDB
 
 
 class Transaction(Base):
-    """Transaction model"""
+    """Transaction model."""
 
     __tablename__ = "transactions"
     __table_args__ = (
@@ -38,9 +32,7 @@ class Transaction(Base):
         default=TransactionStatusEnumDB.DRAFT,
         index=True,
     )
-    created = Column(
-        DateTime(timezone=True), server_default=func.now(), nullable=False, index=True
-    )
+    created = Column(DateTime(timezone=True), server_default=func.now(), nullable=False, index=True)
 
     user = relationship("User", back_populates="transactions")
 
@@ -59,6 +51,7 @@ class Transaction(Base):
     )
 
     def __repr__(self) -> str:
+        """Transaction model."""
         return (
             f"<Transaction(id={self.id}, user_id={self.user_id}, "
             f"currency={self.currency}, amount={self.amount}, status={self.status})>"

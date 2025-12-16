@@ -1,17 +1,22 @@
+"""User balance repository."""
+
 from decimal import Decimal
 from typing import List, Optional
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.db_models import CurrencyEnumDB, UserBalance
+from app.exceptions import NegativeBalanceException
+from app.models.db_models import UserBalance
+from app.models.enums import CurrencyEnumDB
 from app.repositories.base import BaseRepository
 
 
 class BalanceRepository(BaseRepository[UserBalance]):
-    """Repository for UserBalance operations"""
+    """Repository for UserBalance operations."""
 
     def __init__(self, session: AsyncSession) -> None:
+        """Initialize the repository."""
         super().__init__(UserBalance, session)
 
     async def get_by_user_and_currency(
@@ -21,18 +26,14 @@ class BalanceRepository(BaseRepository[UserBalance]):
     ) -> Optional[UserBalance]:
         """Get balance by user and currency."""
         result = await self.session.execute(
-            select(UserBalance)
-            .where(UserBalance.user_id == user_id)
-            .where(UserBalance.currency == currency)
+            select(UserBalance).where(UserBalance.user_id == user_id).where(UserBalance.currency == currency)
         )
         return result.scalar_one_or_none()
 
     async def get_user_balances(self, user_id: int) -> List[UserBalance]:
         """Get all balances for a user."""
         result = await self.session.execute(
-            select(UserBalance)
-            .where(UserBalance.user_id == user_id)
-            .order_by(UserBalance.currency)
+            select(UserBalance).where(UserBalance.user_id == user_id).order_by(UserBalance.currency)
         )
         return list(result.scalars().all())
 
@@ -46,14 +47,12 @@ class BalanceRepository(BaseRepository[UserBalance]):
         balance = await self.get_by_user_and_currency(user_id, currency)
 
         if balance is None:
-            raise ValueError(
-                f"Balance not found for user {user_id} and currency {currency}"
-            )
+            raise ValueError(f"Balance not found for user {user_id} and currency {currency}")
 
         new_amount = balance.amount + amount_delta
 
         if new_amount < 0:
-            raise ValueError(
+            raise NegativeBalanceException(
                 f"Insufficient balance: current={balance.amount}, delta={amount_delta}, result={new_amount}"
             )
 

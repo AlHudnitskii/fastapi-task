@@ -1,23 +1,15 @@
-from models.enums import CurrencyEnumDB, UserStatusEnumDB
-from sqlalchemy import (
-    Column,
-    DateTime,
-    Enum,
-    ForeignKey,
-    Index,
-    Integer,
-    Numeric,
-    String,
-    UniqueConstraint,
-)
+"""Middleware to log requests and responses."""
+
+from sqlalchemy import Column, DateTime, Enum, ForeignKey, Index, Integer, Numeric, String, UniqueConstraint
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
 from app.database import Base
+from app.models.enums import CurrencyEnumDB, UserStatusEnumDB
 
 
 class User(Base):
-    """User model"""
+    """User model."""
 
     __tablename__ = "users"
 
@@ -29,9 +21,7 @@ class User(Base):
         default=UserStatusEnumDB.ACTIVE,
         index=True,
     )
-    created = Column(
-        DateTime(timezone=True), server_default=func.now(), nullable=False, index=True
-    )
+    created = Column(DateTime(timezone=True), server_default=func.now(), nullable=False, index=True)
 
     balances = relationship(
         "UserBalance",
@@ -48,17 +38,16 @@ class User(Base):
     )
 
     def __repr__(self) -> str:
+        """User model representation."""
         return f"<User(id={self.id}, email={self.email}, status={self.status})>"
 
 
 class UserBalance(Base):
-    """User balance per currency"""
+    """User balance per currency."""
 
     __tablename__ = "user_balances"
     __table_args__ = (
-        UniqueConstraint(
-            "user_id", "currency", name="unique_user_balance_user_currency"
-        ),
+        UniqueConstraint("user_id", "currency", name="unique_user_balance_user_currency"),
         Index("index_user_balances_user_currency", "user_id", "currency"),
     )
 
@@ -75,5 +64,6 @@ class UserBalance(Base):
 
     user = relationship("User", back_populates="balances")
 
-    def __repr(self) -> str:
+    def __repr__(self) -> str:
+        """User balance model representation."""
         return f"<UserBalance(id={self.id}, user_id={self.user_id}, currency={self.currency}, amount={self.amount})>"
