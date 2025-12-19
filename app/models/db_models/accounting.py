@@ -1,24 +1,15 @@
-from models.enums import AccountTypeEnumDB, EntryTypeEnumDB, EventStatusEnumDB
-from sqlalchemy import (
-    JSON,
-    Boolean,
-    CheckConstraint,
-    Column,
-    DateTime,
-    Enum,
-    ForeignKey,
-    Integer,
-    Numeric,
-    String,
-)
+"""Module containing schemas for reports."""
+
+from sqlalchemy import JSON, Boolean, CheckConstraint, Column, DateTime, Enum, ForeignKey, Integer, Numeric, String
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
 from app.database import Base
+from app.models.enums import AccountTypeEnumDB, EntryTypeEnumDB, EventStatusEnumDB
 
 
 class Account(Base):
-    """Account for storing financial transactions"""
+    """Account for storing financial transactions."""
 
     __tablename__ = "accounts"
 
@@ -47,14 +38,15 @@ class Account(Base):
     )
 
     def __repr__(self) -> str:
+        """Representation of the Account model."""
         return f"<Account(id={self.id}, code='{self.code}', name='{self.name}', type={self.account_type.value})>"
 
 
 class JournalEntry(Base):
-    """Log entry for financial transactions"""
+    """Log entry for financial transactions."""
 
     __tablename__ = "journal_entries"
-    __table_args__ = CheckConstraint("amount > 0", name="positive_amount")
+    __table_args__ = (CheckConstraint("amount > 0", name="positive_amount"),)
 
     id = Column(Integer, primary_key=True)
     transaction_id = Column(
@@ -82,6 +74,7 @@ class JournalEntry(Base):
     account = relationship("Account", back_populates="entries")
 
     def __repr__(self) -> str:
+        """Return a string representation of the JournalEntry object."""
         return (
             f"<JournalEntry("
             f"id={self.id}, "
@@ -94,7 +87,7 @@ class JournalEntry(Base):
 
 
 class OutboxEvent(Base):
-    """Transaction outbox event"""
+    """Transaction outbox event."""
 
     __tablename__ = "outbox_events"
 
@@ -103,12 +96,8 @@ class OutboxEvent(Base):
     aggregate_id = Column(String(100), nullable=False, index=True)
     event_type = Column(String(100), nullable=False)
     payload = Column(JSON, nullable=False)
-    created = Column(
-        DateTime(timezone=True), server_default=func.now(), nullable=False, index=True
-    )
-    processed = Column(
-        DateTime(timezone=True), server_default=func.now(), nullable=False, index=True
-    )
+    created = Column(DateTime(timezone=True), server_default=func.now(), nullable=False, index=True)
+    processed = Column(DateTime(timezone=True), server_default=func.now(), nullable=False, index=True)
     status = Column(
         Enum(EventStatusEnumDB, name="event_status_enum"),
         default=EventStatusEnumDB.PENDING,
@@ -125,6 +114,7 @@ class OutboxEvent(Base):
     transaction = relationship("Transaction", back_populates="outbox_event")
 
     def __repr__(self) -> str:
+        """Representation of the OutboxEvent model."""
         return (
             f"<OutboxEvent("
             f"id={self.id}, "

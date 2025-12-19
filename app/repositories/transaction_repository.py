@@ -1,19 +1,31 @@
+"""Repository for Transaction operations."""
+
 from datetime import datetime
 from decimal import Decimal
 from typing import List, Optional
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
-from app.models.db_models import CurrencyEnumDB, Transaction, TransactionStatusEnumDB
+from app.models.db_models.transaction import Transaction
+from app.models.enums import CurrencyEnumDB, TransactionStatusEnumDB
 from app.repositories.base import BaseRepository
 
 
 class TransactionRepository(BaseRepository[Transaction]):
-    """Repository for Transaction operations"""
+    """Repository for Transaction operations."""
 
     def __init__(self, session: AsyncSession) -> None:
+        """Initialize TransactionRepository."""
         super().__init__(Transaction, session)
+
+    async def get_by_id_with_entries(self, transaction_id: int) -> Optional[Transaction]:
+        """Get transaction by ID with its journal entries preloaded."""
+        result = await self.session.execute(
+            select(Transaction).options(selectinload(Transaction.entries)).where(Transaction.id == transaction_id)
+        )
+        return result.unique().scalar_one_or_none()
 
     async def get_user_transactions(
         self,
@@ -38,10 +50,7 @@ class TransactionRepository(BaseRepository[Transaction]):
     ) -> List[Transaction]:
         """Get all transactions."""
         result = await self.session.execute(
-            select(Transaction)
-            .order_by(Transaction.created.desc())
-            .offset(skip)
-            .limit(limit)
+            select(Transaction).order_by(Transaction.created.desc()).offset(skip).limit(limit)
         )
         return list(result.scalars().all())
 
@@ -51,7 +60,7 @@ class TransactionRepository(BaseRepository[Transaction]):
         end_date: datetime,
         status: Optional[TransactionStatusEnumDB] = None,
     ) -> int:
-        """Count transactions in period"""
+        """Count transactions in period."""
         query = (
             select(func.count())
             .select_from(Transaction)
@@ -72,12 +81,8 @@ class TransactionRepository(BaseRepository[Transaction]):
         status: Optional[TransactionStatusEnumDB] = None,
         amount_condition: Optional[str] = None,
     ) -> List[Transaction]:
-        """Get transactions in period with filters"""
-        query = (
-            select(Transaction)
-            .where(Transaction.created >= start_date)
-            .where(Transaction.created <= end_date)
-        )
+        """Get transactions in period with filters."""
+        query = select(Transaction).where(Transaction.created >= start_date).where(Transaction.created <= end_date)
 
         if status is not None:
             query = query.where(Transaction.status == status)
@@ -98,7 +103,7 @@ class TransactionRepository(BaseRepository[Transaction]):
         status: Optional[TransactionStatusEnumDB] = None,
         amount_condition: Optional[str] = None,
     ) -> Decimal:
-        """Sum transaction amounts in period"""
+        """Sum transaction amounts in period."""
         query = (
             select(func.sum(Transaction.amount))
             .where(Transaction.created >= start_date)
@@ -128,7 +133,7 @@ class TransactionRepository(BaseRepository[Transaction]):
         user_ids: List[int],
         include_rollbacked: bool = True,
     ) -> int:
-        """Count users who made deposits in period"""
+        """Count users who made deposits in period."""
         query = (
             select(func.count(func.distinct(Transaction.user_id)))
             .where(Transaction.user_id.in_(user_ids))

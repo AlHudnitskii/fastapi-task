@@ -4,14 +4,16 @@ version = "0.1.0"
 description = "Optimized API service for transaction processing"
 authors = ["Author <alhudnitski@gmail.com>"]
 readme = "README.md"
+package-mode = false
 
 [tool.poetry.dependencies]
 python = ">=3.11, <=3.13.1"
 fastapi = "0.115.14"
 uvicorn = {extras = ["standard"], version = "0.23.2"}
-sqlalchemy = "2.0.45"
+sqlalchemy = "^2.0.45"
+loguru = "0.7.3"
 asyncpg = "0.31.0"
-pydantic = "2.12.5"
+pydantic = {extras = ["email"], version = "^2.12.5"}
 pydantic-settings = "2.12.0"
 alembic = "1.17.2"
 celery = {extras = ["redis"], version = "5.6.0"}
@@ -54,6 +56,7 @@ pytest-httpx = "0.26.0"
 pytest-mock = "3.11.1"
 pytest-xdist = "3.3.1"
 faker = "19.10.0"
+aiosqlite = "0.20.0"
 mypy = "1.7.0"
 flake8 = "6.1.0"
 isort = "5.12.0"

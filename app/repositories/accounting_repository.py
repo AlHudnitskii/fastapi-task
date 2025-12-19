@@ -6,6 +6,7 @@ from typing import List, Optional
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.models.db_models.accounting import Account, JournalEntry, OutboxEvent
 from app.models.db_models.transaction import Transaction
@@ -62,8 +63,10 @@ class AccountingRepository:
 
     async def post_transaction(self, transaction_id: int) -> Transaction:
         """Post a transaction and creates an event in the outbox."""
-        result = await self.session.execute(select(Transaction).where(Transaction.id == transaction_id))
-        transaction = result.scalar_one()
+        result = await self.session.execute(
+            select(Transaction).options(selectinload(Transaction.entries)).where(Transaction.id == transaction_id)
+        )
+        transaction = result.scalar_one_or_none()
 
         if transaction.status != "DRAFT":
             raise ValueError(f"Transaction already has status {transaction.status}")

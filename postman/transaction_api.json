@@ -1,0 +1,605 @@
+{
+	"info": {
+		"_postman_id": "transaction-api-collection",
+		"name": "Transaction API",
+		"description": "API коллекция для тестирования Transaction API\n\nБазовый URL: http://localhost:8000",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Health Check",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						""
+					]
+				},
+				"description": "Проверка работоспособности API"
+			},
+			"response": []
+		},
+		{
+			"name": "Users",
+			"item": [
+				{
+					"name": "Create User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    pm.collectionVariables.set(\"user_id\", response.id);",
+									"    pm.collectionVariables.set(\"user_email\", response.email);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"test@example.com\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/users",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users"
+							]
+						},
+						"description": "Создание нового пользователя с автоматическим созданием балансов для всех валют"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Users",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/users",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users"
+							]
+						},
+						"description": "Получение списка всех пользователей"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Users by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/users?user_id={{user_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users"
+							],
+							"query": [
+								{
+									"key": "user_id",
+									"value": "{{user_id}}"
+								}
+							]
+						},
+						"description": "Получение пользователей по ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Users by Email",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/users?email={{user_email}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users"
+							],
+							"query": [
+								{
+									"key": "email",
+									"value": "{{user_email}}"
+								}
+							]
+						},
+						"description": "Получение пользователей по email"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Users by Status",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/users?user_status=ACTIVE",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users"
+							],
+							"query": [
+								{
+									"key": "user_status",
+									"value": "ACTIVE",
+									"description": "ACTIVE или BLOCKED"
+								}
+							]
+						},
+						"description": "Получение пользователей по статусу"
+					},
+					"response": []
+				},
+				{
+					"name": "Get User by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/users/{{user_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users",
+								"{{user_id}}"
+							]
+						},
+						"description": "Получение детальной информации о пользователе по ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Update User Status to BLOCKED",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"status\": \"BLOCKED\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/users/{{user_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users",
+								"{{user_id}}"
+							]
+						},
+						"description": "Блокировка пользователя"
+					},
+					"response": []
+				},
+				{
+					"name": "Update User Status to ACTIVE",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"status\": \"ACTIVE\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/users/{{user_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users",
+								"{{user_id}}"
+							]
+						},
+						"description": "Активация пользователя"
+					},
+					"response": []
+				}
+			],
+			"description": "Эндпоинты для работы с пользователями"
+		},
+		{
+			"name": "Transactions",
+			"item": [
+				{
+					"name": "Create Deposit Transaction",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    pm.collectionVariables.set(\"transaction_id\", response.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"currency\": \"USD\",\n    \"amount\": \"100.50\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/transactions/users/{{user_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"transactions",
+								"users",
+								"{{user_id}}"
+							]
+						},
+						"description": "Создание депозитной транзакции (положительная сумма)"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Withdrawal Transaction",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"currency\": \"USD\",\n    \"amount\": \"-50.25\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/transactions/users/{{user_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"transactions",
+								"users",
+								"{{user_id}}"
+							]
+						},
+						"description": "Создание транзакции на снятие средств (отрицательная сумма)"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Transaction EUR",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"currency\": \"EUR\",\n    \"amount\": \"200.00\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/transactions/users/{{user_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"transactions",
+								"users",
+								"{{user_id}}"
+							]
+						},
+						"description": "Создание транзакции в EUR"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Transaction BTC",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"currency\": \"BTC\",\n    \"amount\": \"0.001\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/transactions/users/{{user_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"transactions",
+								"users",
+								"{{user_id}}"
+							]
+						},
+						"description": "Создание транзакции в BTC"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Transactions",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/transactions",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"transactions"
+							]
+						},
+						"description": "Получение всех транзакций"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Transactions by User",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/transactions?user_id={{user_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"transactions"
+							],
+							"query": [
+								{
+									"key": "user_id",
+									"value": "{{user_id}}"
+								}
+							]
+						},
+						"description": "Получение транзакций конкретного пользователя"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Transactions with Pagination",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/transactions?skip=0&limit=10",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"transactions"
+							],
+							"query": [
+								{
+									"key": "skip",
+									"value": "0"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						},
+						"description": "Получение транзакций с пагинацией"
+					},
+					"response": []
+				},
+				{
+					"name": "Rollback Transaction",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/transactions/users/{{user_id}}/transactions/{{transaction_id}}/rollback",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"transactions",
+								"users",
+								"{{user_id}}",
+								"transactions",
+								"{{transaction_id}}",
+								"rollback"
+							]
+						},
+						"description": "Откат транзакции (возврат средств при снятии или списание при депозите)"
+					},
+					"response": []
+				}
+			],
+			"description": "Эндпоинты для работы с транзакциями"
+		},
+		{
+			"name": "Reports",
+			"item": [
+				{
+					"name": "Get Weekly Report",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/reports/weekly?weeks=52",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"reports",
+								"weekly"
+							],
+							"query": [
+								{
+									"key": "weeks",
+									"value": "52",
+									"description": "Количество недель для анализа (по умолчанию 52)"
+								}
+							]
+						},
+						"description": "Получение еженедельного отчета о транзакциях (синхронный)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Weekly Report (1 week)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/reports/weekly?weeks=1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"reports",
+								"weekly"
+							],
+							"query": [
+								{
+									"key": "weeks",
+									"value": "1"
+								}
+							]
+						},
+						"description": "Получение отчета за одну неделю"
+					},
+					"response": []
+				},
+				{
+					"name": "Generate Weekly Report Async",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"weeks\": 52\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/reports/weekly/async?weeks=52",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"reports",
+								"weekly",
+								"async"
+							],
+							"query": [
+								{
+									"key": "weeks",
+									"value": "52"
+								}
+							]
+						},
+						"description": "Асинхронная генерация еженедельного отчета (использует Celery)"
+					},
+					"response": []
+				}
+			],
+			"description": "Эндпоинты для работы с отчетами"
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000",
+			"type": "string"
+		},
+		{
+			"key": "user_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "user_email",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "transaction_id",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

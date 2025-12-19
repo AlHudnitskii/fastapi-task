@@ -1,16 +1,19 @@
+"""Application settings."""
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    """Application settings"""
+    """Application settings."""
 
-    model_config = SettingsConfigDict(
-        env_file=".env", env_file_encoding="utf-8", case_sensitive=False, extra="ignore"
-    )
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", case_sensitive=False, extra="ignore")
 
     app_name: str = "Transaction API"
     app_version: str = "0.1.0"
     debug: bool = False
+
+    log_level: str = "INFO"
+    log_dir: str = "logs"
 
     host: str = "0.0.0.0"
     port: int = 8000
@@ -31,14 +34,13 @@ class Settings(BaseSettings):
 
     @property
     def database_url(self) -> str:
-        """Construct database URL"""
+        """Construct database URL."""
         return (
-            f"postgresql+asyncpg://{self.db_user}:{self.db_password}"
-            f"@{self.db_host}:{self.db_port}/{self.db_name}"
+            f"postgresql+asyncpg://{self.db_user}:{self.db_password}" f"@{self.db_host}:{self.db_port}/{self.db_name}"
         )
 
     def redis_url(self) -> str:
-        """Construct Redis URL"""
+        """Construct Redis URL."""
         return f"redis://{self.redis_host}:{self.redis_port}/{self.redis_db}"
 
 

@@ -1,5 +1,7 @@
 """Custom exception classes for the application."""
 
+from decimal import Decimal
+
 from fastapi import HTTPException, status
 
 
@@ -64,8 +66,8 @@ class NegativeBalanceException(HTTPException):
     def __init__(
         self,
         currency: str,
-        current_balance: float,
-        requested_amount: float,
+        current_balance: Decimal,
+        requested_amount: Decimal,
     ) -> None:
         """Initialize the exception with the currency, current balance, and requested amount."""
         super().__init__(

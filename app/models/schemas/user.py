@@ -5,8 +5,9 @@ from datetime import datetime
 from decimal import Decimal
 from typing import List
 
-from models.enums import CurrencyEnumDB, UserStatusEnumDB
 from pydantic import BaseModel, EmailStr, Field, field_validator
+
+from app.models.enums import CurrencyEnumDB, UserStatusEnumDB
 
 
 class UserCreateRequest(BaseModel):
