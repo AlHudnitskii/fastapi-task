@@ -1,4 +1,4 @@
-__pycache__/
+__pycache__
 *.py[cod]
 *$py.class
 *.so
@@ -23,6 +23,7 @@ MANIFEST
 venv/
 env/
 ENV/
+.venv/
 env.bak/
 venv.bak/
 
@@ -75,3 +76,6 @@ $RECYCLE.BIN/
 dmypy.json
 .pyre/
 .pytype/
+
+
+poetry.lock
