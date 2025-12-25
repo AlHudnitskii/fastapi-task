@@ -48,7 +48,7 @@ class TransactionService:
         if not user:
             logger.warning("User not found for transaction creation", user_id=user_id)
             raise UserNotExistsException(user_id)
-        if user.status == UserStatusEnumDB.BLOCKED:
+        if user.status is UserStatusEnumDB.BLOCKED:
             logger.warning("Blocked user attempted transaction creation", user_id=user_id)
             raise UserBlockedException(user_id, "create transaction")
 

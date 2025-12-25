@@ -80,7 +80,7 @@ class JournalEntry(Base):
             f"id={self.id}, "
             f"transaction_id={self.transaction_id}, "
             f"account_id={self.account_id}, "
-            f"type={self.entry_type.value if self.entry_type else 'None'}, "
+            f"type={self.entry_type.value}, "
             f"amount={self.amount}"
             f")>"
         )
@@ -120,7 +120,7 @@ class OutboxEvent(Base):
             f"id={self.id}, "
             f"aggregate='{self.aggregate_type}:{self.aggregate_id}', "
             f"event='{self.event_type}', "
-            f"status={self.status.value if self.status else 'None'}, "
+            f"status={self.status.value}, "
             f"created={self.created}"
             f")>"
         )

@@ -4,7 +4,7 @@ from fastapi import Request
 from loguru import logger
 
 
-def get_request_logger(request: Request = None):
+def get_request_logger(request: Request):
     """Dependency to retrieve the request-scoped loguru logger."""
     if request and hasattr(request.state, "request_id"):
         request_id = getattr(request.state, "request_id")
